@@ -104,18 +104,37 @@ void tbbMasterRunManager::CreateOneTask(G4int id,G4int evts)
   fTaskList.push_back( task );
 }
 
-// void tbbMasterRunManager::StartWork() // int numTasks)
+void tbbMasterRunManager::StartWork() // int numTasks)
+{
+  G4cout << " Calling CreateAndStartWorkers() " << G4endl;
+  CreateAndStartWorkers();
+}
 
-// CreateAndStartWorkers
+// CreateAndStartWorkers must be called only on the *master*
+//  ( The check that it is not called twice is a "simple" check,
+//  not meant to protect against calls from different threads. )
 void tbbMasterRunManager::CreateAndStartWorkers()
 {
-  // ??
-  // tbb::task::spawn_root_and_wait(); // ??
-  // tbb::task::set_ref_count(3); // 2 (1 per child task) + 1 (for the wait)
-  // tbb::task::spawn_and_wait_for_all(fTaskList);
+  static G4bool startedWorkers= false;
+  static int    numCalls=0;
+  
+  G4cout << " tbbMasterRunManager::CreateAndStartWorkers() called. " << G4endl;
 
-  tbb::task::spawn_root_and_wait(fTaskList);
-  // Creates the workers and waits for it to end ...
+  numCalls++;
+ 
+  if( startedWorkers ){
+    G4cerr << "ERROR> tbbMasterRunManager::CreateAndStartWorkers called for a *second* or further time. " << G4endl;
+    
+    G4cerr << "        Call number = " << numCalls << G4endl;
+  } else {
+    // tbb::task::spawn_root_and_wait(); // ??
+    // tbb::task::set_ref_count(3); // 2 (1 per child task) + 1 (for the wait)
+    // tbb::task::spawn_and_wait_for_all(fTaskList);
+    startedWorkers= true;
+    
+    tbb::task::spawn_root_and_wait(fTaskList);
+    // Creates the workers and waits for it to end ...
+  }
 }
 
 void tbbMasterRunManager::RunTermination()

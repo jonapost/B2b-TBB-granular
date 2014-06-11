@@ -135,16 +135,17 @@ int main(int argc,char** argv)
   // Get the pointer to the User Interface manager
   G4UImanager* UImanager = G4UImanager::GetUIpointer();
 
+  G4int nEvents= 50;
+
   if (argc!=1)   // batch mode
-    {
+  {
       G4String command = "/control/execute ";
       G4String fileName = argv[1];
       UImanager->ApplyCommand(command+fileName);
-    }
+  }
   else
-    {  // interactive mode : define UI session
+  {  // interactive mode : define UI session
 #if 1
-      G4int nEvents= 50; 
       runManager->BeamOn(nEvents); 
 #else     
    #ifdef G4UI_USE      
@@ -156,12 +157,13 @@ int main(int argc,char** argv)
       delete ui;
    #endif
 #endif
-    }
- //END-G4
+  }
+  //END-G4
 
 #if 1
-  runManager->CreateTasks();
-  runManager->CreateAndStartWorkers();
+  runManager->CreateTasks(nEvents);
+  runManager->StartWork();
+  // runManager->CreateAndStartWorkers();
 
 #else
     G4Thread aThread;

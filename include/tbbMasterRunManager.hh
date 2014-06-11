@@ -47,10 +47,10 @@
 class tbbMasterRunManager : public G4MTRunManager {
 public:
   tbbMasterRunManager(); // G4RunManagerKernel* existingRMK=0);
-                         // Default constructor,
-                         //  tasklist is the tbb::task_list to which the created tasks will be added.
-                         //  nEvents is the number of events for which each tbb::task is responsible
-                         //
+    // Default constructor,
+    //  tasklist is the tbb::task_list to which the created tasks will be added.
+    //  nEvents is the number of events for which each tbb::task is responsible
+
   virtual ~tbbMasterRunManager();
   virtual void RunTermination();
 
@@ -61,13 +61,13 @@ public:
   void SetNumberEventsPerTask( G4int nt ) { fNumEvtsPerTask = nt; }
   //Specify number of events that each simulation task is responsible
   //for
-protected:
-  virtual void CreateAndStartWorkers();
-  virtual void TerminateWorkers();
   
-  void         CreateTasks(int numEvents);  // Create a full set of tasks for one run
+  void         CreateTasks(int numEvents);  // Create the tasks for one run
   void         StartWork();
   
+protected:
+  virtual void CreateAndStartWorkers();  // Must take this over!
+  virtual void TerminateWorkers();
   
   virtual void CreateOneTask(G4int id,G4int evts);
   //Creates a concrete tbb::task with index id
