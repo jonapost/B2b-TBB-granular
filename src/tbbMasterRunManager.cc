@@ -41,6 +41,8 @@
 
 #include "tbbMasterRunManager.hh"
 #include "tbbTask.hh"
+
+#include <tbb/task_scheduler_init.h>
 #include <tbb/task.h>
 
 using tbb::task;
@@ -48,7 +50,7 @@ using tbb::task;
 tbbMasterRunManager::tbbMasterRunManager() :
     G4MTRunManager(),
    // fTaskList(static_cast<tbb::task_list*>(0)),
-    nEvtsPerTask(1)
+    fNumEvtsPerTask(1)
 {
   // tbb::task_scheduler_init init( numberOfCoresToUse );
 
@@ -65,37 +67,55 @@ void tbbMasterRunManager::TerminateWorkers()
 }
 
 
-void tbbMasterRunManager::CreateTasks()
+void tbbMasterRunManager::CreateTasks(int numEvents)
 {
   //Instead of pthread based workers, create tbbTask
-  G4int ntasks = numberOfEventToBeProcessed/nEvtsPerTask;
-  G4int remn = numberOfEventToBeProcessed % nEvtsPerTask;
-  for ( G4int nt = 0 ; nt < ntasks ; ++nt )
-  {
-      G4int evts= nEvtsPerTask;
-      if ( nt == ntasks - 1 ) evts+=remn;
-      CreateOneTask(nt,evts);
+  G4int ntasks = numEvents/fNumEvtsPerTask;
+  G4int remainEv = 0;
+  if( fNumEvtsPerTask > 1 ) {
+    remainEv = numEvents % fNumEvtsPerTask;
   }
-  // tbb::
-  set_ref_count(ntasks+1); // (1 per child task) + 1 (for the wait)
-  spawn_and_wait_for_all(fTaskList);
+  
+  G4cout << "tbbMasterRunManager::CreateTasks: " << G4endl
+         << "  Creating " << ntasks << " tasks, "
+         << " with " << fNumEvtsPerTask << " events per task. "
+         << G4endl;
+  G4int nt;
+  for (  nt = 0 ; nt < ntasks ; ++nt )
+  {
+     G4int evts= fNumEvtsPerTask;
+     CreateOneTask(nt,evts);
+  }
+  if( remainEv != 0 ) {
+     G4cout << "  Creating 1 (extra) task for remaining "
+            << remainEv << " events. " << G4endl;
+     CreateOneTask(++nt, remainEv );
+  }
+  // if ( nt == ntasks - 1 ) evts+=remainEv;
+
 }
 
 void tbbMasterRunManager::CreateOneTask(G4int id,G4int evts)
 {
-    tbbTask& task = * new(tbb::task::allocate_root())
+  tbbTask& task = * new(tbb::task::allocate_root())
                       tbbTask( id , NULL , evts ); //Add output for merging
-    fTaskList.push_back( task );
+  G4cout << " Created task with id=" << id
+         << " with " << evts << " events. " << G4endl;
+  fTaskList.push_back( task );
 }
 
+// void tbbMasterRunManager::StartWork() // int numTasks)
+
 // CreateAndStartWorkers
-void tbbMasterRunManager::StartWork() // int numTasks)
+void tbbMasterRunManager::CreateAndStartWorkers()
 {
   // ??
   // tbb::task::spawn_root_and_wait(); // ??
-  tbb::set_ref_count(3); // 2 (1 per child task) + 1 (for the wait)
-  tbb::spawn_and_wait_for_all(list1);
-  // Creates the workers and waits for it to end ... 
+  // tbb::task::set_ref_count(3); // 2 (1 per child task) + 1 (for the wait)
+  // tbb::task::spawn_and_wait_for_all(fTaskList);
+
+  tbb::task::spawn_root_and_wait(fTaskList);
+  // Creates the workers and waits for it to end ...
 }
 
 void tbbMasterRunManager::RunTermination()

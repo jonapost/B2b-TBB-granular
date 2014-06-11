@@ -53,18 +53,19 @@ public:
                          //
   virtual ~tbbMasterRunManager();
   virtual void RunTermination();
-  // void SetTaskList( tbb::task_list* tl ) { theTasks = tl; }
+
+  // void SetTaskList( tbb::task_list* tl ) { fTaskList = tl; }
   
   //Set a reference to the output task list where new tasks will
   //be added to
-  void SetNumberEventsPerTask( G4int nt ) { nEvtsPerTask = nt; }
+  void SetNumberEventsPerTask( G4int nt ) { fNumEvtsPerTask = nt; }
   //Specify number of events that each simulation task is responsible
   //for
 protected:
   virtual void CreateAndStartWorkers();
   virtual void TerminateWorkers();
   
-  void         CreateTasks();  // Create a full set of tasks for one run
+  void         CreateTasks(int numEvents);  // Create a full set of tasks for one run
   void         StartWork();
   
   
@@ -81,7 +82,7 @@ protected:
   virtual void NewActionRequest( WorkerActionRequest /*newRequest*/ ) {}
 private:
   tbb::task_list fTaskList;
-  G4int nEvtsPerTask;
+  G4int          fNumEvtsPerTask;
 };
 
 #endif //TBBMASTERRUNMANAGER_HH

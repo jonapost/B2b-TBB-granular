@@ -110,7 +110,8 @@ int main(int argc,char** argv)
   //Set TBB specific data to run-manager, 1 event per tbb::task (e.g. Nevents == N tasks)
   //Note that a /run/beamOn command will just create tasks and add them to tasks
   runManager->SetNumberEventsPerTask(1); //Not needed since 1 is default
-  runManager->SetTaskList(&tasks);
+  // runManager->SetTaskList(&tasks);
+  
   //Set user-initialization that specify threading model, in this case TBB.
   //This overwrote default that used pthreads
 
